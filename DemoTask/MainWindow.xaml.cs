@@ -12,10 +12,19 @@ namespace DemoTask
     // Pattern observateur
     // 
     private CancellationTokenSource? cancellationTokenSource;
-
+    // Utilisation de Progress<T> sous le type IProgress<T> qui est l'interface d'émission de MAJ
+    private IProgress<string> progress;
     public MainWindow()
     {
       InitializeComponent();
+      // Instanciation de la classe Progress<T> sur le thread UI
+      // UpdateGui sera la fonction à appeler sur le thread GUI
+      // lorsqu'une notification de progrès sera reçue par un thread quelconque
+      progress = new Progress<string>(UpdateGui);
+    }
+    private void UpdateGui(string msg)
+    {
+      textBlockMsg.Text = msg;
     }
     private async void buttonStart_Click(object sender, RoutedEventArgs e)
     {
@@ -63,7 +72,6 @@ namespace DemoTask
       //  if (cancellationToken.IsCancellationRequested)
       //    throw new TaskCanceledException();
       //}
-
       Task t1 = Task.Factory.StartNew(() => Thread.Sleep(3000));
       // Thank you Sébastien and John Thiriet
       var taskCompletionSource = new TaskCompletionSource<decimal>();
@@ -79,7 +87,6 @@ namespace DemoTask
       Action action = () => LongComputation(cancellationToken);
       Task longTask = Task.Run(action);
       await longTask;
-      //Task t2 = Task.Run( );
       await Task.WhenAny(t1, taskCompletionSource.Task);
       return "Hello world";
     }
@@ -88,7 +95,8 @@ namespace DemoTask
       for (int i = 0; i < 10; i++)
       {
         await Task.Delay(300, cancellationToken);
-        textBlockMsg.Text = "Etape " +(i+1);
+
+        progress.Report("Etape " + (i + 1));
       }
     }
     private Task<string> ReadAsync2()
