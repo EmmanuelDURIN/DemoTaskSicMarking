@@ -7,14 +7,12 @@ using System.Windows;
 
 namespace DemoTask
 {
-  /// <summary>
-  /// Interaction logic for MainWindow.xaml
-  /// </summary>
   public partial class MainWindow : Window
   {
     // Pattern observateur
     // 
     private CancellationTokenSource? cancellationTokenSource;
+
     public MainWindow()
     {
       InitializeComponent();
@@ -66,7 +64,7 @@ namespace DemoTask
       //    throw new TaskCanceledException();
       //}
 
-      Task t1 = Task.Factory.StartNew (() => Thread.Sleep(3000));
+      Task t1 = Task.Factory.StartNew(() => Thread.Sleep(3000));
       // Thank you Sébastien and John Thiriet
       var taskCompletionSource = new TaskCompletionSource<decimal>();
       // Registering a lambda into the cancellationToken
@@ -75,9 +73,23 @@ namespace DemoTask
         // We received a cancellation message, cancel the TaskCompletionSource.Task
         taskCompletionSource.TrySetCanceled();
       });
+      // Les lambdas excelllent à :
+      // 1° Capturer des variables
+      // 2° Etre des adaptateurs de fonction (ajouter ou enlever des params)
+      Action action = () => LongComputation(cancellationToken);
+      Task longTask = Task.Run(action);
+      await longTask;
       //Task t2 = Task.Run( );
       await Task.WhenAny(t1, taskCompletionSource.Task);
       return "Hello world";
+    }
+    private async void LongComputation(CancellationToken cancellationToken)
+    {
+      for (int i = 0; i < 10; i++)
+      {
+        await Task.Delay(300, cancellationToken);
+        textBlockMsg.Text = "Etape " +(i+1);
+      }
     }
     private Task<string> ReadAsync2()
     {
