@@ -9,9 +9,13 @@ namespace DemoTask
 {
   public partial class MainWindow : Window
   {
+
+
     // Pattern observateur
     // 
     private CancellationTokenSource? cancellationTokenSource;
+
+
 
     public MainWindow()
     {
