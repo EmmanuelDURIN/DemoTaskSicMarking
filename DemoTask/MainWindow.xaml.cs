@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -27,21 +28,29 @@ namespace DemoTask
       progressBar1.IsIndeterminate = true;
       buttonStart.IsEnabled = false;
       buttonCancel.IsEnabled = true;
-      string msg = await ReadAsync();
+      try
+      {
+        string msg = await ReadAsync(cancellationToken);
+        textBlockMsg.Text = msg;
+      }
+      catch (TaskCanceledException ex)
+      {
+        // tout va bien 
+        Debug.WriteLine("Annulation de la tâche par l'utilisateur");
+      }
       // Freezant :
       //string msg = ReadAsync().Result;
       progressBar1.IsIndeterminate = false;
       buttonStart.IsEnabled = true;
       buttonCancel.IsEnabled = false;
-      textBlockMsg.Text = msg;
     }
-    private async Task<string> ReadAsync()
+    private async Task<string> ReadAsync(CancellationToken cancellationToken)
     {
       // Bloquant
       //Thread.Sleep(3000);
       // Bloquant
       //Task.Delay(3000).Wait();
-      await Task.Delay(3000);
+      await Task.Delay(3000, cancellationToken);
       return "Hello world";
     }
     private Task<string> ReadAsync2()
@@ -54,6 +63,7 @@ namespace DemoTask
     }
     private void buttonCancel_Click(object sender, RoutedEventArgs e)
     {
+      // Emission signal annulation
       cancellationTokenSource?.Cancel();
     }
   }
