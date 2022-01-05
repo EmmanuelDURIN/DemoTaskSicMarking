@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -50,7 +52,31 @@ namespace DemoTask
       //Thread.Sleep(3000);
       // Bloquant
       //Task.Delay(3000).Wait();
-      await Task.Delay(3000, cancellationToken);
+
+      // Code simulant une requête sur un serveur
+      //await Task.Delay(3000, cancellationToken);
+
+      HttpClient client = new HttpClient { BaseAddress = new Uri("http://google.com") };
+      HttpResponseMessage resp = await client.GetAsync("", cancellationToken);
+      resp.EnsureSuccessStatusCode();
+      // Tache longue annulable
+      //for (int i = 0; i < 100_000; i++)
+      //{
+      //  if (cancellationToken.IsCancellationRequested)
+      //    throw new TaskCanceledException();
+      //}
+
+      Task t1 = Task.Factory.StartNew (() => Thread.Sleep(3000));
+      // Thank you Sébastien and John Thiriet
+      var taskCompletionSource = new TaskCompletionSource<decimal>();
+      // Registering a lambda into the cancellationToken
+      cancellationToken.Register(() =>
+      {
+        // We received a cancellation message, cancel the TaskCompletionSource.Task
+        taskCompletionSource.TrySetCanceled();
+      });
+      //Task t2 = Task.Run( );
+      await Task.WhenAny(t1, taskCompletionSource.Task);
       return "Hello world";
     }
     private Task<string> ReadAsync2()
