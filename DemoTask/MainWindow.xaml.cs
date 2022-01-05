@@ -13,8 +13,6 @@ namespace DemoTask
     // 
     private CancellationTokenSource? cancellationTokenSource;
 
-
-
     public MainWindow()
     {
       InitializeComponent();
